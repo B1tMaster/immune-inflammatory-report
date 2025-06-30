@@ -1,0 +1,36 @@
+[project]
+name = "immune-inflam-index"
+version = "1.0.0"
+description = "Calculate immune inflammatory indices from blood test PDFs"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pdfplumber~=0.11.7",
+    "pytesseract~=0.3.13", 
+    "pillow~=11.2.0",
+    "fuzzywuzzy~=0.18.0",
+    "python-Levenshtein~=0.27.0",
+    "click~=8.1.0",
+    "rich~=14.0.0",
+    "reportlab~=4.4.0",
+]
+
+[project.optional-dependencies]
+visualization = ["matplotlib~=3.8.0"]
+batch = ["pandas~=2.2.0"]
+all = ["matplotlib~=3.8.0", "pandas~=2.2.0"]
+
+[project.scripts]
+immune-inflam-index = "immune_inflam_index.cli:main"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest~=8.3.0",
+    "black~=24.8.0", 
+    "mypy~=1.11.0",
+    "coverage~=7.6.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

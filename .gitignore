@@ -1,0 +1,33 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Sample reports and patient data
+sample_reports/
+*.pdf
+*blood_report*
+*Blood_report*
+patient_data/
+test_reports/
+
+# Generated reports
+immune_inflammatory_report_*.txt
+immune_inflammatory_report_*.pdf
+immune_inflammatory_results_*.json
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
