@@ -25,16 +25,14 @@ def validate_numeric_value(value: Union[float, int], name: str, min_val: float, 
     # Check for negative values
     if float_value < 0:
         errors.append(f"{name} cannot be negative (got {float_value})")
-    
     # Check for zero values (problematic for division)
-    if float_value == 0:
+    elif float_value == 0:
         if name.lower() == "lymphocytes":
             errors.append(f"{name} cannot be zero (needed for ratio calculations)")
         else:
             warnings.append(f"{name} is zero - this may indicate severe condition")
-    
-    # Check physiological ranges
-    if float_value < min_val or float_value > max_val:
+    # Check physiological ranges (but not for negative/zero values already handled above)
+    elif float_value < min_val or float_value > max_val:
         if float_value < min_val * 0.1 or float_value > max_val * 10:
             errors.append(f"{name} ({float_value}) is extremely outside normal range ({min_val}-{max_val}) - possible data entry error")
         else:
@@ -97,11 +95,13 @@ def validate_inputs(
         lymph_val = validation_results["lymphocytes"]["value"]
         neutro_val = validation_results["neutrophils"]["value"]
         
-        # Check for extremely high NLR (potential data entry error)
+        # Check for high NLR (clinical significance and potential data entry error)
         if lymph_val > 0:
             nlr = neutro_val / lymph_val
             if nlr > 50:
                 all_warnings.append(f"Calculated NLR ({nlr:.1f}) is extremely high - please verify input values")
+            elif nlr > 5:
+                all_warnings.append(f"Calculated NLR ({nlr:.1f}) indicates high inflammatory state")
     
     # Check platelet-to-lymphocyte ratio for extreme values
     if validation_results["platelets"]["valid"] and validation_results["lymphocytes"]["valid"]:
@@ -112,6 +112,8 @@ def validate_inputs(
             plr = plat_val / lymph_val
             if plr > 1000:
                 all_warnings.append(f"Calculated PLR ({plr:.1f}) is extremely high - please verify input values")
+            elif plr > 200:
+                all_warnings.append(f"Calculated PLR ({plr:.1f}) indicates elevated inflammatory/thrombotic state")
     
     return {
         "valid": len(all_errors) == 0,
