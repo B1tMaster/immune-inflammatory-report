@@ -34,7 +34,7 @@ Unlike traditional single markers (like C-reactive protein), these indices lever
 ## Calculated Indices
 
 ### 1. Systemic Immune-Inflammation Index (SII)
-**Formula:** `SII = (Neutrophils × Platelets) / Lymphocytes`
+**Formula:** `SII = (Neutrophils Ã— Platelets) / Lymphocytes`
 
 Reflects the balance between neutrophil-platelet pro-inflammatory activity and lymphocyte-mediated adaptive immunity. Higher values indicate predominance of innate inflammatory responses.
 
@@ -49,7 +49,7 @@ Represents the balance between neutrophil-driven acute inflammation and lymphocy
 Indicates the relationship between platelet-mediated hemostatic/inflammatory responses and lymphocyte immune function. Elevation may reflect increased thrombotic risk and inflammatory burden.
 
 ### 4. Systemic Inflammatory Response Index (SIRI)
-**Formula:** `SIRI = (Neutrophils × Monocytes) / Lymphocytes`
+**Formula:** `SIRI = (Neutrophils Ã— Monocytes) / Lymphocytes`
 
 Incorporates monocyte activation alongside neutrophil-lymphocyte balance, providing insight into tissue-based inflammatory responses and macrophage activation.
 
@@ -59,7 +59,7 @@ Incorporates monocyte activation alongside neutrophil-lymphocyte balance, provid
 Reflects monocyte activation relative to lymphocyte function, indicating the degree of tissue inflammatory response and macrophage-mediated inflammatory processes.
 
 ### 6. Pan-Immune-Inflammation Value (PIV)
-**Formula:** `PIV = (Neutrophils × Platelets × Monocytes) / Lymphocytes`
+**Formula:** `PIV = (Neutrophils Ã— Platelets Ã— Monocytes) / Lymphocytes`
 
 Comprehensive index incorporating all major inflammatory cell types, providing overall assessment of pan-immune inflammatory activation across all cell populations.
 
@@ -90,9 +90,31 @@ These inflammatory indices are based on extensive research in inflammatory bioma
 ### Prerequisites
 
 - Python 3.8 or higher
-- pip package manager
+- uv package manager (recommended) or pip
 
 ### macOS Installation
+
+#### Using uv (Recommended)
+
+```bash
+# Install uv package manager
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install system dependencies
+brew install tesseract
+
+# Clone the repository
+git clone https://github.com/yourusername/immune-inflam-index.git
+cd immune-inflam-index
+
+# Install dependencies and activate virtual environment
+uv sync
+
+# Activate the virtual environment
+source .venv/bin/activate
+```
+
+#### Using pip
 
 ```bash
 # Install system dependencies
@@ -114,6 +136,29 @@ pip install -e .
 ```
 
 ### Windows Installation
+
+#### Using uv (Recommended)
+
+```powershell
+# Install uv package manager
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# Install Tesseract OCR
+# Download from: https://github.com/UB-Mannheim/tesseract/wiki
+# Add tesseract to your PATH
+
+# Clone the repository
+git clone https://github.com/yourusername/immune-inflam-index.git
+cd immune-inflam-index
+
+# Install dependencies and activate virtual environment
+uv sync
+
+# Activate the virtual environment
+.venv\Scripts\activate
+```
+
+#### Using pip
 
 ```powershell
 # Install Tesseract OCR
@@ -170,42 +215,58 @@ Create a configuration file at `~/.immune_inflam_config.json`:
 #### Basic PDF Processing (macOS)
 
 ```bash
-# Process a PDF blood test report
+# Process a PDF blood test report (using uv)
+uv run python -m immune_inflam_index.cli process-pdf path/to/bloodtest.pdf
+
+# Or if virtual environment is activated
 python -m immune_inflam_index.cli process-pdf path/to/bloodtest.pdf
 
 # Specify output directory
-python -m immune_inflam_index.cli process-pdf path/to/bloodtest.pdf --output-dir ./reports
+uv run python -m immune_inflam_index.cli process-pdf path/to/bloodtest.pdf --output-dir ./reports
 
 # Specify patient demographics manually (overrides auto-detection)
-python -m immune_inflam_index.cli process-pdf path/to/bloodtest.pdf --patient-age 45 --patient-sex F
+uv run python -m immune_inflam_index.cli process-pdf path/to/bloodtest.pdf --patient-age 45 --patient-sex F
 
 # Generate specific format
-python -m immune_inflam_index.cli process-pdf path/to/bloodtest.pdf --format json
+uv run python -m immune_inflam_index.cli process-pdf path/to/bloodtest.pdf --format json
 
 # Multiple formats
-python -m immune_inflam_index.cli process-pdf path/to/bloodtest.pdf --format pdf --format text --format json
+uv run python -m immune_inflam_index.cli process-pdf path/to/bloodtest.pdf --format pdf --format text --format json
 ```
 
 #### Basic PDF Processing (Windows)
 
 ```powershell
-# Process a PDF blood test report
+# Process a PDF blood test report (using uv)
+uv run python -m immune_inflam_index.cli process-pdf "C:\path\to\bloodtest.pdf"
+
+# Or if virtual environment is activated
 python -m immune_inflam_index.cli process-pdf "C:\path\to\bloodtest.pdf"
 
 # Specify output directory
-python -m immune_inflam_index.cli process-pdf "C:\path\to\bloodtest.pdf" --output-dir "C:\Reports"
+uv run python -m immune_inflam_index.cli process-pdf "C:\path\to\bloodtest.pdf" --output-dir "C:\Reports"
 
 # Specify patient demographics manually
-python -m immune_inflam_index.cli process-pdf "C:\path\to\bloodtest.pdf" --patient-age 45 --patient-sex F
+uv run python -m immune_inflam_index.cli process-pdf "C:\path\to\bloodtest.pdf" --patient-age 45 --patient-sex F
 
 # Generate specific format
-python -m immune_inflam_index.cli process-pdf "C:\path\to\bloodtest.pdf" --format json
+uv run python -m immune_inflam_index.cli process-pdf "C:\path\to\bloodtest.pdf" --format json
 ```
 
 #### Manual Value Entry
 
 ```bash
-# Calculate indices from manual input
+# Calculate indices from manual input (using uv)
+uv run python -m immune_inflam_index.cli calculate \
+    --neutrophils 4200 \
+    --lymphocytes 1800 \
+    --platelets 250000 \
+    --monocytes 480 \
+    --patient-age 32 \
+    --patient-sex M \
+    --output-dir ./reports
+
+# Or if virtual environment is activated
 python -m immune_inflam_index.cli calculate \
     --neutrophils 4200 \
     --lymphocytes 1800 \
@@ -219,7 +280,10 @@ python -m immune_inflam_index.cli calculate \
 #### Interactive Mode
 
 ```bash
-# Start interactive mode for manual value entry
+# Start interactive mode for manual value entry (using uv)
+uv run python -m immune_inflam_index.cli interactive
+
+# Or if virtual environment is activated
 python -m immune_inflam_index.cli interactive
 ```
 
@@ -445,13 +509,13 @@ Sex-Specific Clinical Considerations:
 
 ### Required Blood Test Values
 
-1. **Neutrophils** (cells/µL or ×10³/L)
-2. **Lymphocytes** (cells/µL or ×10³/L)
-3. **Platelets** (cells/µL or ×10³/L)
+1. **Neutrophils** (cells/Î¼L or Ã—10Â³/L)
+2. **Lymphocytes** (cells/Î¼L or Ã—10Â³/L)
+3. **Platelets** (cells/Î¼L or Ã—10Â³/L)
 
 ### Optional Values
 
-4. **Monocytes** (cells/µL or ×10³/L) - enhances MLR, SIRI, and PIV calculations
+4. **Monocytes** (cells/Î¼L or Ã—10Â³/L) - enhances MLR, SIRI, and PIV calculations
 
 ### Patient Information (Optional but Recommended)
 
@@ -518,11 +582,102 @@ Sex-Specific Clinical Considerations:
 - Recent major surgery or trauma
 - Pregnancy (may require adjusted interpretations)
 
+## Testing Framework
+
+This project uses a comprehensive testing framework to ensure reliability and quality.
+
+### Test Structure
+
+- **Unit Tests** (`tests/unit/`): Test individual modules and functions
+- **Integration Tests** (`tests/integration/`): Test complete workflows and CLI functionality
+- **Property-Based Tests** (`tests/property/`): Use hypothesis for robust edge case testing
+- **Fixtures** (`tests/fixtures/`): Synthetic PDF generators and mock data
+
+### Running Tests
+
+#### Using uv (Recommended)
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run with coverage
+uv run pytest --cov=immune_inflam_index --cov-report=html
+
+# Run specific test categories
+uv run pytest tests/unit/          # Unit tests only
+uv run pytest tests/integration/   # Integration tests only
+uv run pytest tests/property/      # Property-based tests only
+
+# Run with verbose output
+uv run pytest -v
+
+# Run tests matching a pattern
+uv run pytest -k "test_calculator"
+```
+
+#### Using pip
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=immune_inflam_index --cov-report=html
+
+# Run specific test categories
+pytest tests/unit/
+pytest tests/integration/
+pytest tests/property/
+```
+
+### Test Dependencies
+
+The testing framework uses:
+
+- **pytest**: Main testing framework
+- **pytest-cov**: Coverage reporting
+- **pytest-mock**: Mocking utilities
+- **hypothesis**: Property-based testing
+- **freezegun**: Time/date mocking
+- **reportlab**: Synthetic PDF generation for testing
+
+### Testing Best Practices
+
+- All new features must include comprehensive unit tests
+- Integration tests should cover realistic user workflows
+- Property-based tests ensure robustness with edge cases
+- Test coverage should be maintained above 90%
+- Mock external dependencies (PDFs, file I/O, etc.)
+
 ## Contributing
 
 We welcome contributions to improve this tool! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ### Development Setup
+
+#### Using uv (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/immune-inflam-index.git
+cd immune-inflam-index
+
+# Install all dependencies including dev dependencies
+uv sync --all-extras
+
+# Run tests
+uv run pytest
+
+# Run linting and formatting
+uv run ruff check src/
+uv run ruff format src/
+
+# Run type checking
+uv run mypy src/
+```
+
+#### Using pip
 
 ```bash
 # Clone and install in development mode
