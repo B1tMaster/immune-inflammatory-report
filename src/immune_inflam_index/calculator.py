@@ -69,13 +69,17 @@ def calculate_indices(
     Calculate all applicable immune inflammatory indices.
     
     Args:
-        neutrophils: Absolute neutrophil count (cells/µL)
-        lymphocytes: Absolute lymphocyte count (cells/µL)
-        platelets: Platelet count (cells/µL)
-        monocytes: Absolute monocyte count (cells/µL, optional)
+        neutrophils: Absolute neutrophil count (cells/µL) - will be converted to ×10⁹/L
+        lymphocytes: Absolute lymphocyte count (cells/µL) - will be converted to ×10⁹/L
+        platelets: Platelet count (cells/µL) - will be converted to ×10⁹/L
+        monocytes: Absolute monocyte count (cells/µL, optional) - will be converted to ×10⁹/L
     
     Returns:
-        Dictionary containing calculated indices with interpretations
+        Dictionary containing calculated indices with interpretations (values in ×10⁹/L units)
+        
+    Note:
+        CRITICAL: All input values are automatically converted from cells/µL to ×10⁹/L
+        for proper formula calculation as per medical literature standards.
     """
     from .validator import validate_inputs
     
@@ -83,6 +87,14 @@ def calculate_indices(
     validation_result = validate_inputs(neutrophils, lymphocytes, platelets, monocytes)
     if not validation_result["valid"]:
         raise ValueError(f"Input validation failed: {validation_result['errors']}")
+    
+    # CRITICAL FIX: Convert from cells/µL to ×10⁹/L for proper formula calculation
+    # Research literature uses ×10⁹/L units, not raw cells/µL
+    # Conversion: cells/µL ÷ 1000 = ×10⁹/L
+    neutrophils_10_9_L = neutrophils / 1000
+    lymphocytes_10_9_L = lymphocytes / 1000
+    platelets_10_9_L = platelets / 1000
+    monocytes_10_9_L = monocytes / 1000 if monocytes is not None else None
     
     results = {
         "results": {},
@@ -94,10 +106,10 @@ def calculate_indices(
         }
     }
     
-    # Calculate basic indices (always available)
+    # Calculate basic indices (always available) using converted units
     try:
         # SII
-        sii_value = calculate_sii(neutrophils, lymphocytes, platelets)
+        sii_value = calculate_sii(neutrophils_10_9_L, lymphocytes_10_9_L, platelets_10_9_L)
         sii_risk = get_risk_level(sii_value, REFERENCE_RANGES["sii"])
         results["results"]["sii"] = {
             "value": round(sii_value, 1),
@@ -107,7 +119,7 @@ def calculate_indices(
         }
         
         # NLR
-        nlr_value = calculate_nlr(neutrophils, lymphocytes)
+        nlr_value = calculate_nlr(neutrophils_10_9_L, lymphocytes_10_9_L)
         nlr_risk = get_risk_level(nlr_value, REFERENCE_RANGES["nlr"])
         results["results"]["nlr"] = {
             "value": round(nlr_value, 2),
@@ -117,7 +129,7 @@ def calculate_indices(
         }
         
         # PLR
-        plr_value = calculate_plr(platelets, lymphocytes)
+        plr_value = calculate_plr(platelets_10_9_L, lymphocytes_10_9_L)
         plr_risk = get_risk_level(plr_value, REFERENCE_RANGES["plr"])
         results["results"]["plr"] = {
             "value": round(plr_value, 1),
@@ -131,10 +143,10 @@ def calculate_indices(
         return results
     
     # Calculate monocyte-dependent indices if monocytes provided
-    if monocytes is not None:
+    if monocytes_10_9_L is not None:
         try:
             # SIRI
-            siri_value = calculate_siri(neutrophils, lymphocytes, monocytes)
+            siri_value = calculate_siri(neutrophils_10_9_L, lymphocytes_10_9_L, monocytes_10_9_L)
             siri_risk = get_risk_level(siri_value, REFERENCE_RANGES["siri"])
             results["results"]["siri"] = {
                 "value": round(siri_value, 1),
@@ -144,7 +156,7 @@ def calculate_indices(
             }
             
             # MLR
-            mlr_value = calculate_mlr(monocytes, lymphocytes)
+            mlr_value = calculate_mlr(monocytes_10_9_L, lymphocytes_10_9_L)
             mlr_risk = get_risk_level(mlr_value, REFERENCE_RANGES["mlr"])
             results["results"]["mlr"] = {
                 "value": round(mlr_value, 2),
@@ -154,7 +166,7 @@ def calculate_indices(
             }
             
             # PIV
-            piv_value = calculate_piv(neutrophils, lymphocytes, platelets, monocytes)
+            piv_value = calculate_piv(neutrophils_10_9_L, lymphocytes_10_9_L, platelets_10_9_L, monocytes_10_9_L)
             piv_risk = get_risk_level(piv_value, REFERENCE_RANGES["piv"])
             results["results"]["piv"] = {
                 "value": round(piv_value, 1),
