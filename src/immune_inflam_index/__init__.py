@@ -12,6 +12,7 @@ from .pdf_parser import process_pdf
 from .validator import validate_inputs
 from .interpreter import interpret_results
 from .reporter import generate_report, save_results
+from .demographic_extractor import extract_patient_demographics
 
 __version__ = "1.0.0"
 __author__ = "Immune Inflammatory Index Project"
@@ -23,4 +24,5 @@ __all__ = [
     "interpret_results",
     "generate_report",
     "save_results",
+    "extract_patient_demographics",
 ]

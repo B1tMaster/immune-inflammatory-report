@@ -13,6 +13,7 @@ from pathlib import Path
 from .constants import FIELD_MAPPINGS, UNIT_CONVERSIONS, PDF_SECTION_HEADERS
 from .extractor import extract_cbc_values, parse_value_with_unit
 from .validator import validate_pdf_extracted_values
+from .demographic_extractor import extract_patient_demographics, validate_demographic_extraction
 
 
 class PDFParsingError(Exception):
@@ -214,6 +215,32 @@ def process_pdf(
                 missing_fields=list(FIELD_MAPPINGS.keys())
             )
         
+        # Extract patient demographics from full text
+        demographics = extract_patient_demographics(text)
+        demographic_validation = validate_demographic_extraction(demographics)
+        
+        # Add demographics to results
+        results["pdf_parsing"]["patient_demographics"] = demographics
+        results["pdf_parsing"]["confidence_scores"].update({
+            "patient_age": demographics["age"].get("confidence", 0),
+            "patient_sex": demographics["sex"].get("confidence", 0), 
+            "test_date": demographics["test_date"].get("confidence", 0)
+        })
+        results["pdf_parsing"]["parsing_warnings"].extend(demographic_validation["warnings"])
+        
+        # Use extracted demographics if not provided manually and confidence is good
+        extracted_age = demographics["age"].get("value") if demographics["age"].get("confidence", 0) >= 80 else None
+        extracted_sex = demographics["sex"].get("value") if demographics["sex"].get("confidence", 0) >= 80 else None
+        
+        # Override manual parameters with extracted ones if they have good confidence
+        final_patient_age = patient_age if patient_age is not None else extracted_age
+        final_patient_sex = patient_sex if patient_sex is not None else extracted_sex
+        
+        if extracted_age and patient_age is None:
+            results["metadata"]["warnings"].append(f"Auto-detected patient age: {extracted_age} years (confidence: {demographics['age']['confidence']}%)")
+        if extracted_sex and patient_sex is None:
+            results["metadata"]["warnings"].append(f"Auto-detected patient sex: {extracted_sex} (confidence: {demographics['sex']['confidence']}%)")
+        
         # Validate extracted values
         validation_result = validate_pdf_extracted_values(extracted_values)
         
@@ -245,12 +272,12 @@ def process_pdf(
         # Merge results
         results.update(calculation_results)
         
-        # Add interpretation with patient context
-        if patient_age or patient_sex:
+        # Add interpretation with patient context (using final demographics)
+        if final_patient_age or final_patient_sex:
             interpretation = interpret_results(
                 calculation_results["results"], 
-                patient_age=patient_age, 
-                patient_sex=patient_sex
+                patient_age=final_patient_age, 
+                patient_sex=final_patient_sex
             )
             results["interpretation"] = interpretation
         

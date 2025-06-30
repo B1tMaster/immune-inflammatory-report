@@ -73,13 +73,27 @@ def _get_age_considerations(age: Optional[int]) -> List[str]:
     if age < 18:
         considerations.append("Pediatric ranges may differ from adult reference values")
         considerations.append("Immune system still developing - values may be more variable")
-    elif age >= 65:
+        considerations.append("Focus on acute inflammatory conditions and infections")
+    elif 18 <= age < 35:
+        # Young Adults (18-35)
+        considerations.append("Elevated indices more likely to indicate acute pathology")
+        considerations.append("Consider lifestyle factors (stress, diet, exercise)")
+        considerations.append("Evaluate for underlying autoimmune conditions")
+        considerations.append("Monitor for infection or acute inflammatory processes")
+    elif 35 <= age < 65:
+        # Middle-aged Adults (35-65)
+        considerations.append("Middle-aged adults may show early signs of inflammaging")
+        considerations.append("Consider screening for age-related inflammatory conditions")
+        considerations.append("Cardiovascular risk factor assessment becomes critical")
+        considerations.append("Metabolic syndrome and insulin resistance considerations")
+        considerations.append("Cancer screening implications for persistently elevated indices")
+    else:
+        # Elderly Adults (65+)
         considerations.append("Elderly patients may have baseline elevation in inflammatory markers")
         considerations.append("Consider age-related immunosenescence effects")
         considerations.append("Higher risk for inflammatory complications")
-    elif age >= 50:
-        considerations.append("Middle-aged adults may show early signs of inflammaging")
-        considerations.append("Consider screening for age-related inflammatory conditions")
+        considerations.append("Adjust thresholds for clinical significance")
+        considerations.append("Focus on functional status and quality of life")
     
     return considerations
 
@@ -95,9 +109,14 @@ def _get_sex_considerations(sex: Optional[str]) -> List[str]:
         considerations.append("Women have higher baseline risk for autoimmune conditions")
         considerations.append("Hormonal fluctuations may affect inflammatory markers")
         considerations.append("Consider pregnancy, menstrual cycle, and menopause effects")
+        considerations.append("Higher prevalence of autoimmune diseases (RA, SLE, thyroid)")
+        considerations.append("Estrogen effects on inflammatory pathways")
     elif sex.upper() == "M":
         considerations.append("Men may have higher baseline inflammatory burden")
         considerations.append("Consider cardiovascular risk factors")
+        considerations.append("Higher risk for cardiovascular disease at younger ages")
+        considerations.append("Different inflammatory patterns compared to females")
+        considerations.append("Occupational and lifestyle risk factors")
     
     return considerations
 

@@ -92,6 +92,71 @@ SII = (6,310 × 181,000) / 1,660 = 688,018.1 (Incorrectly flagged as "Very High"
 - Scientific Reports - sarcopenia associations
 - Multiple cancer prognosis validation studies
 
+## Age-Specific Clinical Significance
+
+**ENHANCED REQUIREMENT**: The system must provide age-appropriate clinical interpretation and recommendations.
+
+### Age Group Classifications
+- **Young Adults (18-35)**: Focus on acute inflammatory conditions, lifestyle factors
+- **Middle-aged Adults (35-65)**: Consider early inflammaging, cardiovascular risk factors  
+- **Elderly (65+)**: Account for baseline inflammatory elevation, immunosenescence
+
+### Age-Specific Considerations by Group
+
+#### Young Adults (18-35 years)
+- **Clinical Focus**: Acute inflammatory conditions, infections, autoimmune diseases
+- **Baseline Expectations**: Lower baseline inflammatory markers
+- **Key Considerations**:
+  - Elevated indices more likely to indicate acute pathology
+  - Consider lifestyle factors (stress, diet, exercise)
+  - Evaluate for underlying autoimmune conditions
+  - Monitor for infection or acute inflammatory processes
+
+#### Middle-aged Adults (35-65 years)  
+- **Clinical Focus**: Early inflammaging, cardiovascular risk, metabolic syndrome
+- **Baseline Expectations**: Gradual increase in inflammatory burden
+- **Key Considerations**:
+  - "Middle-aged adults may show early signs of inflammaging"
+  - "Consider screening for age-related inflammatory conditions"
+  - Cardiovascular risk factor assessment becomes critical
+  - Metabolic syndrome and insulin resistance considerations
+  - Cancer screening implications for persistently elevated indices
+
+#### Elderly Adults (65+ years)
+- **Clinical Focus**: Immunosenescence, frailty, chronic disease management
+- **Baseline Expectations**: Higher baseline inflammatory markers are normal
+- **Key Considerations**:
+  - "Elderly patients may have baseline elevation in inflammatory markers" 
+  - "Consider age-related immunosenescence effects"
+  - "Higher risk for inflammatory complications"
+  - Adjust thresholds for clinical significance
+  - Focus on functional status and quality of life
+
+### Sex-Specific Considerations
+
+#### Female Patients
+- **Key Factors**: "Women have higher baseline risk for autoimmune conditions"
+- **Additional Considerations**:
+  - "Hormonal fluctuations may affect inflammatory markers"
+  - "Consider pregnancy, menstrual cycle, and menopause effects"
+  - Higher prevalence of autoimmune diseases (RA, SLE, thyroid)
+  - Estrogen effects on inflammatory pathways
+
+#### Male Patients  
+- **Key Factors**: "Men may have higher baseline inflammatory burden"
+- **Additional Considerations**:
+  - "Consider cardiovascular risk factors"
+  - Higher risk for cardiovascular disease at younger ages
+  - Different inflammatory patterns compared to females
+  - Occupational and lifestyle risk factors
+
+### Implementation Requirements
+1. **Automatic Age Detection**: Extract patient age from PDF reports
+2. **Age-Adjusted Interpretation**: Provide age-appropriate clinical context
+3. **Targeted Recommendations**: Customize recommendations based on age group
+4. **Risk Stratification**: Consider age in overall risk assessment
+5. **Documentation**: Include age-specific considerations in all reports
+
 ## Input Methods
 
 The tool supports two input methods:
@@ -157,6 +222,29 @@ The parser uses multiple strategies to locate CBC values:
    - cells/µL ↔ x10³/L ↔ K/µL
    - Handles scientific notation variations
 
+5. **Patient demographic extraction**: Automatically extracts patient information:
+   - Age: "58 Years Male", "Age: 45", "45 yo", "45 y.o."
+   - Sex: "Male", "Female", "M", "F" 
+   - Test date: "Collected: 03/03/25", "Date: 2025-03-03"
+
+#### Patient Demographic Patterns
+The parser recognizes these demographic patterns:
+- **Age patterns**:
+  - `(\d+)\s*[Yy]ears?\s*([Mm]ale|[Ff]emale)` → "58 Years Male"
+  - `[Aa]ge[:\s]*(\d+)` → "Age: 58"  
+  - `(\d+)\s*[Yy]\.?[Oo]\.?` → "58 yo", "58 y.o."
+  - `(\d+)\s*([Mm]|[Ff]|[Mm]ale|[Ff]emale)` → "58 M"
+
+- **Sex patterns**:
+  - `([Mm]ale|[Ff]emale)` → "Male", "Female"
+  - `\b([MF])\b` → "M", "F"
+  - Context-based extraction from age lines
+
+- **Date patterns**:
+  - `[Cc]ollected[:\s]*(\d{2}/\d{2}/\d{2,4})` → "Collected: 03/03/25"
+  - `[Dd]ate[:\s]*(\d{4}-\d{2}-\d{2})` → "Date: 2025-03-03"
+  - `[Rr]eported[:\s]*(\d{2}/\d{2}/\d{2,4})` → "Reported: 03/03/25"
+
 #### Confidence Scoring
 Each extracted value receives a confidence score (0-100):
 - **90-100**: Exact pattern match with clear field identification
@@ -182,13 +270,21 @@ The program should return a structured result containing:
             "neutrophils": float,
             "lymphocytes": float, 
             "platelets": float,
-            "monocytes": float
+            "monocytes": float,
+            "patient_age": float,  # Confidence for demographic extraction
+            "patient_sex": float,
+            "test_date": float
         },
         "extracted_values": {
             "neutrophils": {"value": float, "unit": str, "raw_text": str},
             "lymphocytes": {"value": float, "unit": str, "raw_text": str},
             "platelets": {"value": float, "unit": str, "raw_text": str},
             "monocytes": {"value": float, "unit": str, "raw_text": str}
+        },
+        "patient_demographics": {
+            "age": {"value": int, "raw_text": str, "confidence": float},
+            "sex": {"value": str, "raw_text": str, "confidence": float}, 
+            "test_date": {"value": str, "raw_text": str, "confidence": float}
         },
         "parsing_warnings": list,
         "manual_verification_needed": bool

@@ -181,23 +181,55 @@ def _save_pdf_report(results: Dict[str, Any], filepath: str):
             story.append(Paragraph(f"<b>Overall Risk Level:</b> {risk_info['overall_risk_level'].replace('_', ' ').title()}", styles['Normal']))
             story.append(Paragraph(f"<b>Urgency:</b> {risk_info['urgency'].replace('_', ' ').title()}", styles['Normal']))
         
-        # Patient context
+        # Patient context and demographics
         if "patient_context" in interp and interp["patient_context"]:
+            story.append(Spacer(1, 12))
+            story.append(Paragraph("Patient Demographics & Clinical Context", styles['Heading3']))
+            
             context = interp["patient_context"]
             if context.get("age"):
-                story.append(Paragraph(f"<b>Patient Age:</b> {context['age']} years", styles['Normal']))
+                age = context['age']
+                story.append(Paragraph(f"<b>Patient Age:</b> {age} years", styles['Normal']))
+                
+                # Determine age group for clinical context
+                if age < 18:
+                    age_group = "Pediatric"
+                elif 18 <= age < 35:
+                    age_group = "Young Adult (18-35)"
+                elif 35 <= age < 65:
+                    age_group = "Middle-aged Adult (35-65)"
+                else:
+                    age_group = "Elderly Adult (65+)"
+                    
+                story.append(Paragraph(f"<b>Age Group:</b> {age_group}", styles['Normal']))
+                
             if context.get("sex"):
                 story.append(Paragraph(f"<b>Patient Sex:</b> {context['sex']}", styles['Normal']))
+            
+            # Add age-specific considerations
+            if context.get("age_considerations"):
+                story.append(Spacer(1, 6))
+                story.append(Paragraph("<b>Age-Specific Clinical Considerations:</b>", styles['Normal']))
+                for consideration in context["age_considerations"]:
+                    story.append(Paragraph(f"• {consideration}", styles['Normal']))
+            
+            # Add sex-specific considerations
+            if context.get("sex_considerations"):
+                story.append(Spacer(1, 6))
+                story.append(Paragraph("<b>Sex-Specific Clinical Considerations:</b>", styles['Normal']))
+                for consideration in context["sex_considerations"]:
+                    story.append(Paragraph(f"• {consideration}", styles['Normal']))
     
     # PDF parsing details
     if "pdf_parsing" in results and results["pdf_parsing"].get("confidence_scores"):
         story.append(Spacer(1, 20))
-        story.append(Paragraph("Extraction Confidence", styles['Heading2']))
+        story.append(Paragraph("PDF Extraction Details", styles['Heading2']))
         
+        # Extraction confidence table
         confidence_data = [['Field', 'Confidence Score', 'Status']]
         for field, score in results["pdf_parsing"]["confidence_scores"].items():
             status = "High" if score >= 80 else "Medium" if score >= 60 else "Low"
-            confidence_data.append([field.title(), f"{score}%", status])
+            confidence_data.append([field.title().replace('_', ' '), f"{score}%", status])
         
         confidence_table = Table(confidence_data)
         confidence_table.setStyle(TableStyle([
@@ -211,6 +243,40 @@ def _save_pdf_report(results: Dict[str, Any], filepath: str):
         ]))
         
         story.append(confidence_table)
+        
+        # Add demographic extraction details if available
+        if "patient_demographics" in results["pdf_parsing"]:
+            story.append(Spacer(1, 12))
+            story.append(Paragraph("Auto-Extracted Patient Demographics", styles['Heading3']))
+            
+            demographics = results["pdf_parsing"]["patient_demographics"]
+            demo_data = [['Field', 'Extracted Value', 'Confidence', 'Source Text']]
+            
+            for field, data in demographics.items():
+                if data.get("value"):
+                    confidence = data.get("confidence", 0)
+                    status = "✓" if confidence >= 80 else "⚠" if confidence >= 60 else "✗"
+                    demo_data.append([
+                        field.title(),
+                        str(data["value"]),
+                        f"{confidence}% {status}",
+                        data.get("raw_text", "")[:40] + ("..." if len(data.get("raw_text", "")) > 40 else "")
+                    ])
+            
+            if len(demo_data) > 1:  # If we have data beyond header
+                demo_table = Table(demo_data)
+                demo_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 9),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.lightgrey),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                
+                story.append(demo_table)
     
     # Warnings and disclaimers
     story.append(Spacer(1, 20))
@@ -306,15 +372,46 @@ def _generate_text_content(results: Dict[str, Any]) -> str:
             lines.append(f"Urgency: {risk_info['urgency'].replace('_', ' ').title()}")
             lines.append("")
         
-        # Patient context
+        # Patient context and demographics
         if "patient_context" in interp and interp["patient_context"]:
             context = interp["patient_context"]
             if context.get("age") or context.get("sex"):
-                lines.append("Patient Context:")
+                lines.append("PATIENT DEMOGRAPHICS & CLINICAL CONTEXT")
+                lines.append("-" * 50)
+                
                 if context.get("age"):
-                    lines.append(f"  Age: {context['age']} years")
+                    age = context['age']
+                    lines.append(f"Age: {age} years")
+                    
+                    # Determine age group
+                    if age < 18:
+                        age_group = "Pediatric"
+                    elif 18 <= age < 35:
+                        age_group = "Young Adult (18-35)"
+                    elif 35 <= age < 65:
+                        age_group = "Middle-aged Adult (35-65)"
+                    else:
+                        age_group = "Elderly Adult (65+)"
+                        
+                    lines.append(f"Age Group: {age_group}")
+                    
                 if context.get("sex"):
-                    lines.append(f"  Sex: {context['sex']}")
+                    lines.append(f"Sex: {context['sex']}")
+                
+                # Add age-specific considerations
+                if context.get("age_considerations"):
+                    lines.append("")
+                    lines.append("Age-Specific Clinical Considerations:")
+                    for consideration in context["age_considerations"]:
+                        lines.append(f"  • {consideration}")
+                
+                # Add sex-specific considerations
+                if context.get("sex_considerations"):
+                    lines.append("")
+                    lines.append("Sex-Specific Clinical Considerations:")
+                    for consideration in context["sex_considerations"]:
+                        lines.append(f"  • {consideration}")
+                        
                 lines.append("")
     
     # PDF extraction confidence
