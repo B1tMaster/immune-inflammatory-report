@@ -46,7 +46,7 @@ The immune inflammatory indices are simple mathematical calculations using routi
 
 ## Critical Unit Conversion Requirements
 
-**RESEARCH FINDINGS (December 2024)**: Initial implementation had a critical 1000x calculation error due to incorrect unit handling.
+**RESEARCH FINDINGS (December 2024)**: Initial implementation had a critical 1000x calculation error due to incorrect unit handling. **FIXED**: Commit 5913c21 corrected unit conversion.
 
 ### Formula Units (Based on Literature Review)
 All immune inflammatory index formulas expect blood cell counts in **×10⁹/L** units, not raw cells/µL:
