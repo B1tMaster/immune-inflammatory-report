@@ -81,11 +81,20 @@ def extract_patient_sex(text: str) -> Dict[str, Any]:
         # Pattern for standalone "Male" or "Female" - high confidence
         (r'\b([Mm]ale|[Ff]emale)\b', 90),
         
-        # Pattern for "M" or "F" with context - moderate confidence  
+        # Pattern for "Sex: M" or "Gender: F" - good confidence
+        (r'(?:[Ss]ex|[Gg]ender)[:\s]*([MF])', 85),
+        
+        # Pattern for "58 M" or "45 F" - moderate confidence  
+        (r'\d+\s*([MF])\b', 80),
+        
+        # Pattern for "M" or "F" with context (age/years nearby) - good confidence
         (r'\b([MF])\b(?=.*(?:[Yy]ears?|[Aa]ge|\d+))', 80),
         
-        # Pattern for "Sex: M" or "Gender: F" - good confidence
-        (r'(?:[Ss]ex|[Gg]ender)[:\s]*([MF])', 85)
+        # Pattern for "Patient M" or "M seen" - contextual single letter
+        (r'(?:Patient|Subject)\s+([MF])\b', 85),
+        
+        # Pattern for standalone single letters (lowest confidence)
+        (r'\b([MF])\b', 60)
     ]
     
     best_match = None
